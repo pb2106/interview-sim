@@ -1,11 +1,12 @@
 /**
- * InterviewIQ — AI Interview Simulator Client Script
+ * InterviewIQ — 1-on-1 Conversational AI Interview Simulator
  * 
- * Strict Zero Persistence:
- * - NO localStorage
- * - NO sessionStorage
- * - NO cookies
- * All state is maintained in runtime memory only.
+ * Guarantees:
+ * - Zero Browser Persistence (No localStorage, sessionStorage, or cookies)
+ * - Zero Emojis
+ * - Minimal, human-like feedback after each question
+ * - Direct statement of the right answer if candidate answer is wrong/incomplete
+ * - Comprehensive end-of-interview report downloadable in PDF format
  */
 
 (() => {
@@ -38,43 +39,24 @@
     countGroup: document.getElementById('countGroup'),
     startInterviewBtn: document.getElementById('startInterviewBtn'),
 
-    // Interview Tracking
+    // Chat Header
     currentCategoryTag: document.getElementById('currentCategoryTag'),
     currentDifficultyTag: document.getElementById('currentDifficultyTag'),
     questionNumberIndicator: document.getElementById('questionNumberIndicator'),
     totalQuestionsIndicator: document.getElementById('totalQuestionsIndicator'),
     interviewProgressBar: document.getElementById('interviewProgressBar'),
 
-    // Question & Answer
-    questionStatementText: document.getElementById('questionStatementText'),
-    answerFormCard: document.getElementById('answerFormCard'),
+    // Chat Stream & Input
+    chatStream: document.getElementById('chatStream'),
+    evalTypingIndicator: document.getElementById('evalTypingIndicator'),
+    chatInputBar: document.getElementById('chatInputBar'),
     answerTextarea: document.getElementById('answerTextarea'),
     charCounter: document.getElementById('charCounter'),
     answerLengthHint: document.getElementById('answerLengthHint'),
     submitAnswerBtn: document.getElementById('submitAnswerBtn'),
 
-    // Evaluation States
-    evalLoadingCard: document.getElementById('evalLoadingCard'),
-    evalResultCard: document.getElementById('evalResultCard'),
-    evalScoreValue: document.getElementById('evalScoreValue'),
-    evalFeedbackText: document.getElementById('evalFeedbackText'),
-    rmCorrectness: document.getElementById('rmCorrectness'),
-    rmRelevance: document.getElementById('rmRelevance'),
-    rmCompleteness: document.getElementById('rmCompleteness'),
-    rmClarity: document.getElementById('rmClarity'),
-    evalStrengthsList: document.getElementById('evalStrengthsList'),
-    evalWeaknessesList: document.getElementById('evalWeaknessesList'),
-    missingConceptsContainer: document.getElementById('missingConceptsContainer'),
-    evalMissingTags: document.getElementById('evalMissingTags'),
-    evalImprovementTipText: document.getElementById('evalImprovementTipText'),
-    toggleIdealBtn: document.getElementById('toggleIdealBtn'),
-    idealAnswerContent: document.getElementById('idealAnswerContent'),
-    idealChevron: document.getElementById('idealChevron'),
-    evalIdealAnswerText: document.getElementById('evalIdealAnswerText'),
-    nextQuestionBtn: document.getElementById('nextQuestionBtn'),
-    nextBtnText: document.getElementById('nextBtnText'),
-
     // Results Elements
+    downloadPdfBtn: document.getElementById('downloadPdfBtn'),
     gaugeMeter: document.getElementById('gaugeMeter'),
     reportPercentage: document.getElementById('reportPercentage'),
     reportScoreRatio: document.getElementById('reportScoreRatio'),
@@ -106,7 +88,7 @@
     errorModalCloseBtn: document.getElementById('errorModalCloseBtn'),
   };
 
-  // Helper: Sanitize Text for safe rendering
+  // Helper: Sanitize Text
   function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -114,13 +96,19 @@
     return div.innerHTML;
   }
 
+  // Scroll Chat to Bottom
+  function scrollChatToBottom() {
+    setTimeout(() => {
+      elements.chatStream.scrollTop = elements.chatStream.scrollHeight;
+    }, 50);
+  }
+
   // View Switching
   function switchView(activeViewName) {
     elements.setupView.style.display = activeViewName === 'setup' ? 'block' : 'none';
-    elements.interviewView.style.display = activeViewName === 'interview' ? 'block' : 'none';
+    elements.interviewView.style.display = activeViewName === 'interview' ? 'flex' : 'none';
     elements.resultsView.style.display = activeViewName === 'results' ? 'block' : 'none';
 
-    // Trigger animation classes
     [elements.setupView, elements.interviewView, elements.resultsView].forEach(v => {
       v.classList.remove('active');
     });
@@ -129,6 +117,7 @@
       setTimeout(() => elements.setupView.classList.add('active'), 10);
     } else if (activeViewName === 'interview') {
       setTimeout(() => elements.interviewView.classList.add('active'), 10);
+      scrollChatToBottom();
     } else if (activeViewName === 'results') {
       setTimeout(() => elements.resultsView.classList.add('active'), 10);
     }
@@ -147,9 +136,8 @@
     elements.errorModal.style.display = 'none';
   }
 
-  // Setup Form Card Selection Listeners
+  // Setup Form Listeners
   function initSetupFormListeners() {
-    // Categories
     const categoryCards = elements.categoryGroup.querySelectorAll('.option-card');
     categoryCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -163,7 +151,6 @@
       });
     });
 
-    // Difficulty
     const diffCards = elements.difficultyGroup.querySelectorAll('.pill-card');
     diffCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -177,7 +164,6 @@
       });
     });
 
-    // Question Count
     const countCards = elements.countGroup.querySelectorAll('.pill-card');
     countCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -191,14 +177,50 @@
       });
     });
 
-    // Start button
     elements.startInterviewBtn.addEventListener('click', handleStartInterview);
+  }
+
+  // Append Interviewer Chat Message
+  function appendInterviewerMessage(htmlContent, customClass = '') {
+    const row = document.createElement('div');
+    row.className = `chat-row chat-row-interviewer ${customClass}`;
+    row.innerHTML = `
+      <div class="avatar interviewer-avatar" aria-hidden="true">AI</div>
+      <div class="chat-bubble bubble-interviewer">
+        ${htmlContent}
+      </div>
+    `;
+    elements.chatStream.appendChild(row);
+    scrollChatToBottom();
+  }
+
+  // Append Candidate Chat Message
+  function appendUserMessage(text) {
+    const row = document.createElement('div');
+    row.className = 'chat-row chat-row-user';
+    row.innerHTML = `
+      <div class="avatar avatar-user" aria-hidden="true">You</div>
+      <div class="chat-bubble bubble-user">
+        ${escapeHtml(text)}
+      </div>
+    `;
+    elements.chatStream.appendChild(row);
+    scrollChatToBottom();
+  }
+
+  // Append Question Bubble to Chat Stream
+  function appendQuestionBubble(questionObj, qNum, total) {
+    const qHtml = `
+      <div class="q-label-tag">Question ${qNum} of ${total}</div>
+      <div class="bubble-question-text">${escapeHtml(questionObj.question)}</div>
+    `;
+    appendInterviewerMessage(qHtml, 'bubble-question');
   }
 
   // Start Interview Handler
   async function handleStartInterview() {
     elements.startInterviewBtn.disabled = true;
-    elements.startInterviewBtn.querySelector('.btn-text').textContent = 'Generating Questions with AI...';
+    elements.startInterviewBtn.querySelector('.btn-text').textContent = 'Connecting with Interviewer...';
 
     try {
       const response = await fetch('/api/interviews', {
@@ -223,49 +245,40 @@
       appState.currentQuestion = data.current_question;
       appState.isInterviewCompleted = false;
 
-      // Render first question
-      renderInterviewScreen();
+      // Initialize Chat Stream
+      elements.chatStream.innerHTML = '';
+
+      // Update header meta
+      elements.currentCategoryTag.textContent = appState.category;
+      elements.currentDifficultyTag.textContent = appState.difficulty;
+      elements.questionNumberIndicator.textContent = '1';
+      elements.totalQuestionsIndicator.textContent = appState.totalQuestions;
+      elements.interviewProgressBar.style.width = '10%';
+
+      // 1-on-1 Welcome message
+      const welcomeMsg = `Hello! I am Alex, and I will be conducting your 1-on-1 interview today on <strong>${escapeHtml(appState.category)}</strong> at the <strong>${escapeHtml(appState.difficulty)}</strong> level. We will work through ${appState.totalQuestions} questions together. Whenever you are ready, here is your first question.`;
+      appendInterviewerMessage(welcomeMsg);
+
+      // First question prompt
+      appendQuestionBubble(appState.currentQuestion, 1, appState.totalQuestions);
+
+      // Reset input bar
+      elements.chatInputBar.style.display = 'block';
+      elements.answerTextarea.value = '';
+      elements.charCounter.textContent = '0 / 5,000 characters';
+      elements.submitAnswerBtn.disabled = true;
+
       switchView('interview');
+      setTimeout(() => elements.answerTextarea.focus(), 300);
     } catch (err) {
-      showError('Interview Generation Failed', err.message || 'Could not connect to the interview service.');
+      showError('Interview Initialization Failed', err.message || 'Could not connect to the interview service.');
     } finally {
       elements.startInterviewBtn.disabled = false;
-      elements.startInterviewBtn.querySelector('.btn-text').textContent = 'Generate Questions & Begin';
+      elements.startInterviewBtn.querySelector('.btn-text').textContent = 'Start 1-on-1 Interview';
     }
   }
 
-  // Render Interview Screen for Current Question
-  function renderInterviewScreen() {
-    elements.currentCategoryTag.textContent = appState.category;
-    elements.currentDifficultyTag.textContent = appState.difficulty;
-
-    const qNum = appState.currentQuestionIndex + 1;
-    elements.questionNumberIndicator.textContent = qNum;
-    elements.totalQuestionsIndicator.textContent = appState.totalQuestions;
-
-    const progressPercent = Math.round((appState.currentQuestionIndex / appState.totalQuestions) * 100);
-    elements.interviewProgressBar.style.width = `${Math.max(5, progressPercent)}%`;
-
-    elements.questionStatementText.textContent = appState.currentQuestion ? appState.currentQuestion.question : '';
-
-    // Reset answer textarea & state
-    elements.answerTextarea.value = '';
-    elements.charCounter.textContent = '0 / 5,000 characters';
-    elements.submitAnswerBtn.disabled = true;
-    elements.answerLengthHint.textContent = 'Minimum 2 characters required';
-    elements.answerLengthHint.style.color = 'var(--text-dim)';
-
-    // Show answer input card, hide loading and result cards
-    elements.answerFormCard.style.display = 'block';
-    elements.evalLoadingCard.style.display = 'none';
-    elements.evalResultCard.style.display = 'none';
-    elements.idealAnswerContent.style.display = 'none';
-    elements.idealChevron.textContent = '▼';
-
-    elements.answerTextarea.focus();
-  }
-
-  // Live Answer Character Counter & Validation
+  // Answer Textarea Live Validation
   elements.answerTextarea.addEventListener('input', () => {
     const val = elements.answerTextarea.value;
     const len = val.length;
@@ -278,19 +291,37 @@
       elements.answerLengthHint.style.color = 'var(--text-dim)';
     } else {
       elements.submitAnswerBtn.disabled = false;
-      elements.answerLengthHint.textContent = 'Ready to submit for AI evaluation';
+      elements.answerLengthHint.textContent = 'Ready to send';
       elements.answerLengthHint.style.color = 'var(--accent-emerald)';
     }
   });
 
-  // Submit Answer Handler
-  elements.submitAnswerBtn.addEventListener('click', async () => {
+  // Submit Answer
+  elements.submitAnswerBtn.addEventListener('click', handleSendAnswer);
+  elements.answerTextarea.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      if (!elements.submitAnswerBtn.disabled) {
+        handleSendAnswer();
+      }
+    }
+  });
+
+  async function handleSendAnswer() {
     const answer = elements.answerTextarea.value.trim();
     if (answer.length < 2) return;
 
+    // Append candidate message bubble to stream
+    appendUserMessage(answer);
+
+    // Clear and lock input bar
+    elements.answerTextarea.value = '';
+    elements.charCounter.textContent = '0 / 5,000 characters';
     elements.submitAnswerBtn.disabled = true;
-    elements.answerFormCard.style.display = 'none';
-    elements.evalLoadingCard.style.display = 'flex';
+    elements.chatInputBar.style.display = 'none';
+
+    // Show typing / reviewing indicator
+    elements.evalTypingIndicator.style.display = 'flex';
+    scrollChatToBottom();
 
     try {
       const response = await fetch(`/api/interviews/${appState.interviewId}/answers`, {
@@ -305,112 +336,110 @@
       }
 
       const evalData = await response.json();
-      displayEvaluationResult(evalData);
+      elements.evalTypingIndicator.style.display = 'none';
+
+      // Render minimal, human-like chatbot response bubble
+      displayMinimalFeedback(evalData);
     } catch (err) {
-      elements.evalLoadingCard.style.display = 'none';
-      elements.answerFormCard.style.display = 'block';
+      elements.evalTypingIndicator.style.display = 'none';
+      elements.chatInputBar.style.display = 'block';
       elements.submitAnswerBtn.disabled = false;
-      showError('Evaluation Failed', err.message || 'Could not complete AI evaluation.');
+      showError('Evaluation Error', err.message || 'Could not complete answer evaluation.');
     }
-  });
-
-  // Display Evaluation Results for the Current Question
-  function displayEvaluationResult(evaluation) {
-    elements.evalLoadingCard.style.display = 'none';
-    elements.evalResultCard.style.display = 'block';
-
-    // Scores
-    elements.evalScoreValue.textContent = evaluation.score;
-    elements.evalFeedbackText.textContent = evaluation.feedback;
-    elements.rmCorrectness.textContent = `${evaluation.correctness_score}/4`;
-    elements.rmRelevance.textContent = `${evaluation.relevance_score}/2`;
-    elements.rmCompleteness.textContent = `${evaluation.completeness_score}/2`;
-    elements.rmClarity.textContent = `${evaluation.clarity_score}/2`;
-
-    // Strengths
-    elements.evalStrengthsList.innerHTML = '';
-    if (evaluation.strengths && evaluation.strengths.length > 0) {
-      evaluation.strengths.forEach(s => {
-        const li = document.createElement('li');
-        li.textContent = s;
-        elements.evalStrengthsList.appendChild(li);
-      });
-    } else {
-      elements.evalStrengthsList.innerHTML = '<li>Baseline response provided.</li>';
-    }
-
-    // Weaknesses
-    elements.evalWeaknessesList.innerHTML = '';
-    if (evaluation.weaknesses && evaluation.weaknesses.length > 0) {
-      evaluation.weaknesses.forEach(w => {
-        const li = document.createElement('li');
-        li.textContent = w;
-        elements.evalWeaknessesList.appendChild(li);
-      });
-    } else {
-      elements.evalWeaknessesList.innerHTML = '<li>No significant deficiencies noted.</li>';
-    }
-
-    // Missing Concepts
-    elements.evalMissingTags.innerHTML = '';
-    if (evaluation.missing_concepts && evaluation.missing_concepts.length > 0) {
-      evaluation.missing_concepts.forEach(c => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = c;
-        elements.evalMissingTags.appendChild(tag);
-      });
-      elements.missingConceptsContainer.style.display = 'block';
-    } else {
-      elements.missingConceptsContainer.style.display = 'none';
-    }
-
-    // Tip & Ideal Answer
-    elements.evalImprovementTipText.textContent = evaluation.improvement_tip;
-    elements.evalIdealAnswerText.textContent = evaluation.ideal_answer;
-
-    // Check if this was the last question
-    appState.isInterviewCompleted = evaluation.is_interview_completed;
-    if (evaluation.is_interview_completed) {
-      elements.nextBtnText.textContent = 'View Final Performance Report';
-    } else {
-      elements.nextBtnText.textContent = 'Proceed to Next Question';
-    }
-
-    // Update progress bar to current completion
-    const newProgress = Math.round(((appState.currentQuestionIndex + 1) / appState.totalQuestions) * 100);
-    elements.interviewProgressBar.style.width = `${newProgress}%`;
   }
 
-  // Toggle Ideal Answer Box
-  elements.toggleIdealBtn.addEventListener('click', () => {
-    const isHidden = elements.idealAnswerContent.style.display === 'none';
-    elements.idealAnswerContent.style.display = isHidden ? 'block' : 'none';
-    elements.idealChevron.textContent = isHidden ? '▲' : '▼';
-  });
+  // Display Minimal Human-like Chatbot Feedback
+  function displayMinimalFeedback(evalData) {
+    appState.isInterviewCompleted = evalData.is_interview_completed;
 
-  // Next Question / Finish Button
-  elements.nextQuestionBtn.addEventListener('click', async () => {
-    if (appState.isInterviewCompleted) {
-      await fetchFinalResults();
-    } else {
-      // Advance to next question
-      appState.currentQuestionIndex += 1;
-      await fetchNextQuestion();
+    let scoreClass = 'score-badge-mid';
+    if (evalData.score >= 8) scoreClass = 'score-badge-high';
+    else if (evalData.score <= 4) scoreClass = 'score-badge-low';
+
+    // Build minimal feedback bubble
+    let feedbackHtml = `
+      <div class="score-tag-row">
+        <span class="score-badge-pill ${scoreClass}">Score: ${evalData.score}/10</span>
+      </div>
+      <p class="feedback-text-p">${escapeHtml(evalData.feedback)}</p>
+    `;
+
+    // If answer wasn't full marks (e.g. score < 10) or correctness < 4, state the right answer directly without explaining why
+    if (evalData.score < 10 && evalData.ideal_answer) {
+      feedbackHtml += `
+        <div class="right-answer-box">
+          <strong>Right Answer:</strong> ${escapeHtml(evalData.ideal_answer)}
+        </div>
+      `;
     }
-  });
 
-  // Fetch Next Question
-  async function fetchNextQuestion() {
+    appendInterviewerMessage(feedbackHtml, 'bubble-feedback');
+
+    // Update progress tracker
+    const completedCount = appState.currentQuestionIndex + 1;
+    const progressPercent = Math.round((completedCount / appState.totalQuestions) * 100);
+    elements.interviewProgressBar.style.width = `${progressPercent}%`;
+
+    // Append Action Button (Next Question or Final Report)
+    const actionRow = document.createElement('div');
+    actionRow.className = 'chat-action-row';
+
+    if (evalData.is_interview_completed) {
+      actionRow.innerHTML = `
+        <button type="button" class="btn btn-primary btn-chat-next" id="viewReportBtn">
+          View Complete Performance Report &amp; PDF
+        </button>
+      `;
+      elements.chatStream.appendChild(actionRow);
+      scrollChatToBottom();
+
+      document.getElementById('viewReportBtn').addEventListener('click', fetchFinalResults);
+    } else {
+      const nextQNum = completedCount + 1;
+      actionRow.innerHTML = `
+        <button type="button" class="btn btn-primary btn-chat-next" id="continueNextQBtn">
+          Continue to Question ${nextQNum}
+        </button>
+      `;
+      elements.chatStream.appendChild(actionRow);
+      scrollChatToBottom();
+
+      document.getElementById('continueNextQBtn').addEventListener('click', async (e) => {
+        // Disable continue button to prevent re-clicks
+        e.target.disabled = true;
+        appState.currentQuestionIndex += 1;
+        await advanceToNextQuestion();
+      });
+    }
+  }
+
+  // Advance to Next Question
+  async function advanceToNextQuestion() {
     try {
       const response = await fetch(`/api/interviews/${appState.interviewId}`);
       if (!response.ok) {
-        throw new Error(`Failed to fetch next question (${response.status})`);
+        throw new Error(`Failed to load next question (${response.status})`);
       }
       const data = await response.json();
       appState.currentQuestionIndex = data.current_question_index;
       appState.currentQuestion = data.current_question;
-      renderInterviewScreen();
+
+      // Update header indicator
+      const qNum = appState.currentQuestionIndex + 1;
+      elements.questionNumberIndicator.textContent = qNum;
+
+      // Interviewer presents the question
+      appendQuestionBubble(appState.currentQuestion, qNum, appState.totalQuestions);
+
+      // Re-enable input bar
+      elements.chatInputBar.style.display = 'block';
+      elements.answerTextarea.value = '';
+      elements.charCounter.textContent = '0 / 5,000 characters';
+      elements.submitAnswerBtn.disabled = true;
+      elements.answerLengthHint.textContent = 'Minimum 2 characters required';
+      elements.answerLengthHint.style.color = 'var(--text-dim)';
+      elements.answerTextarea.focus();
+      scrollChatToBottom();
     } catch (err) {
       showError('Navigation Error', err.message || 'Could not load next question.');
     }
@@ -418,9 +447,6 @@
 
   // Fetch Final Results and Show Report
   async function fetchFinalResults() {
-    elements.nextQuestionBtn.disabled = true;
-    elements.nextBtnText.textContent = 'Generating Performance Report...';
-
     try {
       const response = await fetch(`/api/interviews/${appState.interviewId}/results`);
       if (!response.ok) {
@@ -434,22 +460,21 @@
       switchView('results');
     } catch (err) {
       showError('Report Generation Error', err.message);
-    } finally {
-      elements.nextQuestionBtn.disabled = false;
-      elements.nextBtnText.textContent = 'View Final Performance Report';
     }
   }
 
   // Render Performance Report
   function renderResultsScreen(report) {
-    // Score & Gauge
+    // Configure PDF Download link
+    elements.downloadPdfBtn.href = `/api/interviews/${report.interview_id}/pdf`;
+    elements.downloadPdfBtn.download = `InterviewIQ_Report_${report.interview_id.substring(0, 8)}.pdf`;
+
+    // Overall Score & Gauge
     const pct = report.percentage_score;
     elements.reportPercentage.textContent = `${pct}%`;
     elements.reportScoreRatio.textContent = `${report.total_score}/${report.max_possible_score}`;
     elements.reportAvgScore.textContent = report.average_score.toFixed(1);
 
-    // Animate SVG Gauge
-    // Circumference = 2 * PI * r = 2 * 3.14159 * 50 = ~314.159
     const circumference = 314.159;
     const offset = circumference - (pct / 100) * circumference;
     setTimeout(() => {
@@ -461,7 +486,6 @@
     elements.reportGradeTitle.textContent = `${report.grade} Overall Performance`;
     elements.reportGradeDesc.textContent = report.grade_description;
 
-    // Apply Grade Color Modifier
     const gradeClassMap = {
       'Excellent': 'grade-excellent',
       'Good': 'grade-good',
@@ -496,13 +520,13 @@
 
     // Highlights: Strongest & Weakest
     if (report.strongest_answer) {
-      elements.strongestQTitle.textContent = `Q${report.strongest_answer.question_number}: ${report.strongest_answer.question}`;
+      elements.strongestQTitle.textContent = `Question ${report.strongest_answer.question_number}: ${report.strongest_answer.question}`;
       elements.strongestQScore.textContent = `Score: ${report.strongest_answer.score}/10 (Correctness: ${report.strongest_answer.correctness_score}/4)`;
       elements.strongestQFeedback.textContent = report.strongest_answer.feedback;
     }
 
     if (report.weakest_answer) {
-      elements.weakestQTitle.textContent = `Q${report.weakest_answer.question_number}: ${report.weakest_answer.question}`;
+      elements.weakestQTitle.textContent = `Question ${report.weakest_answer.question_number}: ${report.weakest_answer.question}`;
       elements.weakestQScore.textContent = `Score: ${report.weakest_answer.score}/10 (Correctness: ${report.weakest_answer.correctness_score}/4)`;
       elements.weakestQFeedback.textContent = report.weakest_answer.feedback;
     }
@@ -520,7 +544,7 @@
       elements.reportFrequentlyMissingTags.innerHTML = '<span class="tag" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #6ee7b7;">None — Strong conceptual coverage</span>';
     }
 
-    // 3 Prioritized Recommendations
+    // Prioritized Recommendations
     elements.reportRecommendationsList.innerHTML = '';
     report.prioritized_recommendations.forEach(rec => {
       const li = document.createElement('li');
@@ -536,7 +560,7 @@
     elements.reportDisclaimerNote.textContent = report.evaluation_disclaimer;
   }
 
-  // Render Question Review Accordion
+  // Render Detailed Question Accordion
   function renderQuestionsAccordion(questionResults) {
     elements.questionsAccordion.innerHTML = '';
     questionResults.forEach((q, idx) => {
@@ -568,8 +592,8 @@
           </div>
 
           <div class="acc-sub-section">
-            <div class="acc-sub-title">Rubric Component Breakdown</div>
-            <div style="font-size: 0.85rem; color: #cbd5e1; font-family: var(--font-mono); margin-bottom: 8px;">
+            <div class="acc-sub-title">Component Breakdown</div>
+            <div style="font-size: 0.84rem; color: #cbd5e1; font-family: var(--font-mono); margin-bottom: 8px;">
               Correctness: ${q.correctness_score}/4 &bull; Relevance: ${q.relevance_score}/2 &bull; Completeness: ${q.completeness_score}/2 &bull; Clarity: ${q.clarity_score}/2
             </div>
             <p style="font-size: 0.88rem; color: var(--text-muted);">${escapeHtml(q.feedback)}</p>
@@ -581,13 +605,12 @@
           </div>
 
           <div class="acc-sub-section" style="margin-bottom: 0;">
-            <div class="acc-sub-title">Reference Model Answer</div>
+            <div class="acc-sub-title">Reference Answer</div>
             <p style="font-size: 0.86rem; color: #94a3b8; line-height: 1.5; font-style: italic;">${escapeHtml(q.ideal_answer)}</p>
           </div>
         </div>
       `;
 
-      // Accordion toggle listener
       const summary = item.querySelector('.accordion-summary');
       const detail = item.querySelector('.accordion-detail');
       const chevron = item.querySelector('.chevron');
@@ -605,17 +628,15 @@
 
   // Retake Interview: Reset State & Return to Setup
   elements.retakeInterviewBtn.addEventListener('click', () => {
-    // Clear all in-memory interview variables
     appState.interviewId = null;
     appState.currentQuestionIndex = 0;
     appState.currentQuestion = null;
     appState.isInterviewCompleted = false;
     appState.finalReport = null;
 
-    // Reset gauge
     elements.gaugeMeter.style.strokeDashoffset = '314';
+    elements.chatStream.innerHTML = '';
 
-    // Switch view
     switchView('setup');
   });
 
@@ -625,7 +646,7 @@
     if (e.target === elements.errorModal) hideError();
   });
 
-  // Initialize
+  // Initialize Setup Form
   initSetupFormListeners();
 
 })();

@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>InterviewIQ — AI Interview Simulator</title>
-  <meta name="description" content="AI Interview Simulator with measurable rubric evaluation powered by Groq. Minimal tokens, in-memory state, and detailed performance reports.">
+  <meta name="description" content="AI Interview Simulator with 1-on-1 conversational evaluation powered by Groq. Minimal tokens, in-memory state, and downloadable PDF performance reports.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <!-- Ambient Motion Graphics Background Canvas -->
+  <!-- Ambient Motion Background -->
   <div class="ambient-canvas" id="ambientCanvas" aria-hidden="true">
     <div class="ambient-orb orb-1"></div>
     <div class="ambient-orb orb-2"></div>
@@ -37,27 +37,27 @@
         </div>
         <div class="brand-text">
           <span class="brand-title">InterviewIQ</span>
-          <span class="brand-badge">Academic Simulator</span>
+          <span class="brand-badge">1-on-1 Simulator</span>
         </div>
       </div>
       <div class="header-status">
         <span class="status-pill in-memory-badge" title="No database or disk retention. Memory-only session.">
-          <span class="pulse-dot"></span> In-Memory State Only
+          <span class="pulse-dot"></span> In-Memory Session
         </span>
-        <span class="status-pill groq-badge">Powered by Groq</span>
+        <span class="status-pill groq-badge">Groq AI</span>
       </div>
     </header>
 
-    <!-- Main Dynamic Content Views -->
+    <!-- Main Content Panels -->
     <main class="app-main" id="appMain">
 
-      <!-- ================= SETUP VIEW ================= -->
+      <!-- ================= 1. SETUP VIEW ================= -->
       <section class="view-panel setup-view active" id="setupView">
         <div class="view-header text-center">
           <div class="chip-label">Interactive Assessment</div>
-          <h1 class="hero-title">Prepare, Practice, and Measure Your Interview Answers</h1>
+          <h1 class="hero-title">1-on-1 Technical Interview Simulator</h1>
           <p class="hero-subtitle">
-            Evaluate your technical articulation against rigorous AI rubrics with component-based scoring, actionable feedback, and token-efficient execution.
+            Converse directly with an AI interviewer. Receive concise, human-like feedback after every answer, and download a complete performance report in PDF format at the end.
           </p>
         </div>
 
@@ -66,12 +66,11 @@
           <div class="form-group">
             <div class="form-group-header">
               <label class="group-label">1. Select Interview Domain</label>
-              <span class="helper-text">Choose the focus area for your questions</span>
+              <span class="helper-text">Choose your topic</span>
             </div>
             <div class="option-grid category-grid" id="categoryGroup" role="radiogroup" aria-label="Category">
               <label class="option-card active" data-value="Software Development">
                 <input type="radio" name="category" value="Software Development" checked>
-                <div class="option-icon">💻</div>
                 <div class="option-content">
                   <span class="option-title">Software Development</span>
                   <span class="option-desc">Architecture, design patterns, testing, system trade-offs</span>
@@ -80,7 +79,6 @@
 
               <label class="option-card" data-value="Python">
                 <input type="radio" name="category" value="Python">
-                <div class="option-icon">🐍</div>
                 <div class="option-content">
                   <span class="option-title">Python</span>
                   <span class="option-desc">Memory management, GIL, async, OOP, and data model</span>
@@ -89,7 +87,6 @@
 
               <label class="option-card" data-value="SQL">
                 <input type="radio" name="category" value="SQL">
-                <div class="option-icon">🗄️</div>
                 <div class="option-content">
                   <span class="option-title">SQL</span>
                   <span class="option-desc">Queries, indexing, transactions, ACID, normalization</span>
@@ -98,40 +95,37 @@
 
               <label class="option-card" data-value="Data Structures and Algorithms">
                 <input type="radio" name="category" value="Data Structures and Algorithms">
-                <div class="option-icon">⚡</div>
                 <div class="option-content">
-                  <span class="option-title">Data Structures &amp; Algo</span>
+                  <span class="option-title">Data Structures &amp; Algorithms</span>
                   <span class="option-desc">Complexity, graphs, dynamic programming, trees</span>
                 </div>
               </label>
 
               <label class="option-card" data-value="General">
                 <input type="radio" name="category" value="General">
-                <div class="option-icon">🌐</div>
                 <div class="option-content">
-                  <span class="option-title">General</span>
+                  <span class="option-title">General Engineering</span>
                   <span class="option-desc">Engineering principles, troubleshooting, API paradigms</span>
                 </div>
               </label>
 
               <label class="option-card" data-value="Behavioural">
                 <input type="radio" name="category" value="Behavioural">
-                <div class="option-icon">🤝</div>
                 <div class="option-content">
                   <span class="option-title">Behavioural</span>
-                  <span class="option-desc">STAR method, leadership, conflicts, decision trade-offs</span>
+                  <span class="option-desc">STAR method, leadership, communication, resolution</span>
                 </div>
               </label>
             </div>
           </div>
 
-          <!-- Difficulty & Question Count Dual Row -->
+          <!-- Difficulty & Question Count Row -->
           <div class="form-row-dual">
             <!-- Difficulty -->
             <div class="form-group flex-1">
               <div class="form-group-header">
                 <label class="group-label">2. Target Difficulty</label>
-                <span class="helper-text">Calibrates scoring expectations</span>
+                <span class="helper-text">Calibrates interviewer expectations</span>
               </div>
               <div class="pill-group" id="difficultyGroup" role="radiogroup" aria-label="Difficulty">
                 <label class="pill-card" data-value="Beginner">
@@ -162,190 +156,122 @@
                 <label class="pill-card active" data-value="5">
                   <input type="radio" name="question_count" value="5" checked>
                   <span class="pill-title">5 Questions</span>
-                  <span class="pill-sub">~8 minutes</span>
+                  <span class="pill-sub">Short session</span>
                 </label>
                 <label class="pill-card" data-value="10">
                   <input type="radio" name="question_count" value="10">
                   <span class="pill-title">10 Questions</span>
-                  <span class="pill-sub">~18 minutes</span>
+                  <span class="pill-sub">Standard</span>
                 </label>
                 <label class="pill-card" data-value="15">
                   <input type="radio" name="question_count" value="15">
                   <span class="pill-title">15 Questions</span>
-                  <span class="pill-sub">~28 minutes</span>
+                  <span class="pill-sub">Comprehensive</span>
                 </label>
               </div>
             </div>
           </div>
 
-          <!-- Rubric Notice Box -->
+          <!-- Info Box -->
           <div class="info-card">
-            <div class="info-icon">ℹ️</div>
-            <div class="info-text">
-              <strong>Fixed 10-Point Rubric:</strong>
-              Each answer is evaluated on Technical Correctness (0–4 pts), Relevance (0–2 pts), Completeness (0–2 pts), and Clarity (0–2 pts). Scores are calculated strictly in Python.
+            <div class="info-content">
+              <strong>Interview Structure:</strong>
+              You will converse directly with the interviewer. After each question, the interviewer gives you quick, minimal feedback. If your answer is wrong, you will be told the right answer directly. Full analytics and a detailed report will be compiled in PDF format at the end.
             </div>
           </div>
 
           <!-- Action Button -->
           <div class="form-actions">
             <button type="button" class="btn btn-primary btn-large" id="startInterviewBtn">
-              <span class="btn-text">Generate Questions &amp; Begin</span>
-              <span class="btn-arrow" aria-hidden="true">→</span>
+              <span class="btn-text">Start 1-on-1 Interview</span>
             </button>
           </div>
         </form>
       </section>
 
-      <!-- ================= INTERVIEW VIEW ================= -->
+      <!-- ================= 2. 1-ON-1 CHATBOT INTERVIEW VIEW ================= -->
       <section class="view-panel interview-view" id="interviewView" style="display: none;">
-        <!-- Interview Header with Progress Tracker -->
-        <div class="interview-tracker-card">
-          <div class="tracker-top">
-            <div class="meta-tags">
-              <span class="meta-pill" id="currentCategoryTag">Category</span>
-              <span class="meta-pill difficulty-pill" id="currentDifficultyTag">Difficulty</span>
-            </div>
-            <div class="tracker-stats">
-              <span class="tracker-q-label">Question <strong id="questionNumberIndicator">1</strong> of <strong id="totalQuestionsIndicator">5</strong></span>
+        
+        <!-- Interview Chat Top Header -->
+        <div class="chat-header-bar">
+          <div class="interviewer-profile">
+            <div class="avatar interviewer-avatar">AI</div>
+            <div class="profile-info">
+              <span class="profile-name">Alex</span>
+              <span class="profile-role">Technical Interviewer</span>
             </div>
           </div>
 
-          <div class="progress-track" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar-fill" id="interviewProgressBar" style="width: 20%;"></div>
+          <div class="chat-header-meta">
+            <span class="meta-pill" id="currentCategoryTag">Category</span>
+            <span class="meta-pill difficulty-pill" id="currentDifficultyTag">Difficulty</span>
+            <span class="meta-counter">
+              Question <strong id="questionNumberIndicator">1</strong> / <strong id="totalQuestionsIndicator">5</strong>
+            </span>
           </div>
         </div>
 
-        <!-- Question Card -->
-        <div class="question-container-card">
-          <div class="question-header">
-            <div class="q-badge">Question Prompt</div>
-          </div>
-          <div class="question-statement" id="questionStatementText">
-            Loading question...
+        <div class="chat-progress-track" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+          <div class="chat-progress-fill" id="interviewProgressBar" style="width: 20%;"></div>
+        </div>
+
+        <!-- Scrollable Chat Stream Container -->
+        <div class="chat-messages-container" id="chatStream">
+          <!-- Populated dynamically with conversational message bubbles -->
+        </div>
+
+        <!-- Typing / Evaluating State -->
+        <div class="typing-indicator" id="evalTypingIndicator" style="display: none;">
+          <div class="avatar avatar-sm">AI</div>
+          <div class="typing-bubble">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="typing-text">Alex is reviewing your answer...</span>
           </div>
         </div>
 
-        <!-- Answer Input Card (Active State) -->
-        <div class="answer-card" id="answerFormCard">
-          <div class="answer-card-header">
-            <label for="answerTextarea" class="input-label">Your Response</label>
+        <!-- Chat Input Footer -->
+        <div class="chat-input-bar" id="chatInputBar">
+          <div class="input-header-row">
+            <span class="input-label-text">Your Answer</span>
             <span class="char-counter" id="charCounter">0 / 5,000 characters</span>
           </div>
-
-          <textarea 
-            id="answerTextarea" 
-            class="answer-textarea" 
-            placeholder="Type your structured explanation here. Be concise, technically precise, and mention key mechanisms or trade-offs..."
-            rows="6"
-            maxlength="5000"
-          ></textarea>
-
-          <div class="answer-actions">
-            <span class="answer-hint" id="answerLengthHint">Minimum 2 characters required</span>
-            <button type="button" class="btn btn-primary" id="submitAnswerBtn" disabled>
-              <span class="btn-text">Submit Answer</span>
+          <div class="input-control-row">
+            <textarea 
+              id="answerTextarea" 
+              class="chat-textarea" 
+              placeholder="Type your answer here..."
+              rows="3"
+              maxlength="5000"
+            ></textarea>
+            <button type="button" class="btn btn-primary btn-send" id="submitAnswerBtn" disabled>
+              <span class="btn-text">Send</span>
             </button>
           </div>
-        </div>
-
-        <!-- Loading State Card -->
-        <div class="eval-loading-card" id="evalLoadingCard" style="display: none;">
-          <div class="eval-spinner"></div>
-          <div class="eval-loading-text">
-            <h3>Evaluating Your Response with Groq AI...</h3>
-            <p>Analyzing technical correctness, relevance, completeness, and clarity against the grading rubric.</p>
-          </div>
-        </div>
-
-        <!-- Evaluation Feedback Card (Shown after submission) -->
-        <div class="eval-result-card" id="evalResultCard" style="display: none;">
-          <div class="eval-result-header">
-            <div class="eval-score-summary">
-              <div class="score-circle-badge">
-                <span class="score-num" id="evalScoreValue">8</span>
-                <span class="score-denom">/10</span>
-              </div>
-              <div class="score-meta">
-                <h3 class="eval-title">Answer Evaluation</h3>
-                <p class="eval-feedback" id="evalFeedbackText">Feedback summary...</p>
-              </div>
-            </div>
-
-            <div class="eval-rubric-mini">
-              <div class="rubric-mini-item">
-                <span class="rm-label">Correctness</span>
-                <span class="rm-val" id="rmCorrectness">3/4</span>
-              </div>
-              <div class="rubric-mini-item">
-                <span class="rm-label">Relevance</span>
-                <span class="rm-val" id="rmRelevance">2/2</span>
-              </div>
-              <div class="rubric-mini-item">
-                <span class="rm-label">Completeness</span>
-                <span class="rm-val" id="rmCompleteness">1/2</span>
-              </div>
-              <div class="rubric-mini-item">
-                <span class="rm-label">Clarity</span>
-                <span class="rm-val" id="rmClarity">2/2</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Evaluation Insights Grid -->
-          <div class="eval-details-grid">
-            <div class="eval-col">
-              <div class="detail-block strengths-block">
-                <div class="detail-title">Key Strengths</div>
-                <ul class="detail-list" id="evalStrengthsList"></ul>
-              </div>
-              <div class="detail-block weaknesses-block">
-                <div class="detail-title">Areas for Refinement</div>
-                <ul class="detail-list" id="evalWeaknessesList"></ul>
-              </div>
-            </div>
-
-            <div class="eval-col">
-              <div class="detail-block missing-block" id="missingConceptsContainer">
-                <div class="detail-title">Expected Concepts Omitted</div>
-                <div class="tags-cloud" id="evalMissingTags"></div>
-              </div>
-              <div class="detail-block tip-block">
-                <div class="detail-title">Actionable Recommendation</div>
-                <p class="tip-text" id="evalImprovementTipText"></p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Ideal Answer Reference Box -->
-          <div class="ideal-answer-box">
-            <button type="button" class="toggle-ideal-btn" id="toggleIdealBtn">
-              <span>View Reference Model Answer</span>
-              <span class="chevron" id="idealChevron">▼</span>
-            </button>
-            <div class="ideal-answer-content" id="idealAnswerContent" style="display: none;">
-              <p id="evalIdealAnswerText"></p>
-            </div>
-          </div>
-
-          <!-- Next Button Action -->
-          <div class="eval-actions">
-            <button type="button" class="btn btn-primary btn-large" id="nextQuestionBtn">
-              <span class="btn-text" id="nextBtnText">Proceed to Next Question</span>
-              <span class="btn-arrow" aria-hidden="true">→</span>
-            </button>
-          </div>
+          <div class="input-hint-row" id="answerLengthHint">Minimum 2 characters required</div>
         </div>
       </section>
 
-      <!-- ================= RESULTS VIEW ================= -->
+      <!-- ================= 3. RESULTS VIEW ================= -->
       <section class="view-panel results-view" id="resultsView" style="display: none;">
         <div class="view-header text-center">
-          <div class="chip-label">Final Evaluation Complete</div>
-          <h1 class="hero-title">Interview Performance Report</h1>
+          <div class="chip-label">Interview Completed</div>
+          <h1 class="hero-title">Final Performance Report</h1>
           <p class="hero-subtitle">
-            Comprehensive metric breakdown calculated in Python from your submitted answers.
+            Comprehensive evaluation calculated in Python from your submitted answers.
           </p>
+        </div>
+
+        <!-- Primary Action: PDF Download Header -->
+        <div class="pdf-action-banner">
+          <div class="pdf-banner-text">
+            <h3>Download Complete Interview Report</h3>
+            <p>Get a formatted PDF containing full rubric breakdowns, candidate answers, ideal reference solutions, and actionable improvement tips.</p>
+          </div>
+          <a id="downloadPdfBtn" href="#" class="btn btn-primary btn-pdf" target="_blank" download>
+            <span class="btn-text">Download PDF Report</span>
+          </a>
         </div>
 
         <!-- Top Score Banner Card -->
@@ -398,10 +324,10 @@
           </div>
         </div>
 
-        <!-- Rubric Criteria Breakdown Cards -->
+        <!-- Criteria Breakdown -->
         <div class="section-title-wrap">
-          <h3 class="section-heading">Criterion-by-Criterion Rubric Breakdown</h3>
-          <span class="section-note">Fixed 10-point evaluation breakdown across all questions</span>
+          <h3 class="section-heading">Rubric Component Breakdown</h3>
+          <span class="section-note">Fixed 10-point evaluation criteria</span>
         </div>
 
         <div class="criteria-grid" id="criteriaBreakdownGrid">
@@ -411,7 +337,7 @@
         <!-- Strongest & Weakest Answers Cards -->
         <div class="highlights-grid">
           <div class="highlight-card strongest-card">
-            <div class="highlight-badge">★ Highest Scoring Answer</div>
+            <div class="highlight-badge">Highest Scoring Answer</div>
             <div class="hl-content" id="strongestAnswerContent">
               <h4 class="hl-q-title" id="strongestQTitle">Question</h4>
               <div class="hl-score" id="strongestQScore">10/10</div>
@@ -420,7 +346,7 @@
           </div>
 
           <div class="highlight-card weakest-card">
-            <div class="highlight-badge">▲ Primary Area for Growth</div>
+            <div class="highlight-badge">Area for Improvement</div>
             <div class="hl-content" id="weakestAnswerContent">
               <h4 class="hl-q-title" id="weakestQTitle">Question</h4>
               <div class="hl-score" id="weakestQScore">5/10</div>
@@ -433,15 +359,15 @@
         <div class="insights-dual-grid">
           <div class="insight-panel missing-panel">
             <h3 class="panel-heading">Frequently Omitted Technical Concepts</h3>
-            <p class="panel-sub">Concepts that repeatedly appeared in the rubric's expected list:</p>
+            <p class="panel-sub">Concepts that appeared repeatedly in the rubric expected list:</p>
             <div class="tags-cloud" id="reportFrequentlyMissingTags">
               <span class="tag">None identified</span>
             </div>
           </div>
 
           <div class="insight-panel recs-panel">
-            <h3 class="panel-heading">3 Prioritized Recommendations</h3>
-            <p class="panel-sub">Targeted guidance synthesized from your performance:</p>
+            <h3 class="panel-heading">Prioritized Recommendations</h3>
+            <p class="panel-sub">Targeted guidance based on your session:</p>
             <ol class="recs-list" id="reportRecommendationsList">
               <!-- Populated by app.js -->
             </ol>
@@ -451,7 +377,7 @@
         <!-- Question-by-Question Review Accordion -->
         <div class="section-title-wrap">
           <h3 class="section-heading">Question-by-Question Detailed Review</h3>
-          <span class="section-note">Click any question to view your submission, rubric scores, and reference answer</span>
+          <span class="section-note">Click any question to view your submission, component scores, and reference answer</span>
         </div>
 
         <div class="questions-accordion" id="questionsAccordion">
@@ -466,21 +392,19 @@
 
         <!-- Final Retake Actions -->
         <div class="results-actions text-center">
-          <button type="button" class="btn btn-primary btn-large" id="retakeInterviewBtn">
+          <button type="button" class="btn btn-secondary btn-large" id="retakeInterviewBtn">
             <span class="btn-text">Start New Interview</span>
-            <span class="btn-arrow" aria-hidden="true">↻</span>
           </button>
         </div>
       </section>
 
     </main>
 
-    <!-- Error Modal / Toast -->
+    <!-- Error Modal -->
     <div class="modal-backdrop" id="errorModal" style="display: none;" role="dialog" aria-modal="true">
       <div class="modal-box">
-        <div class="modal-icon">⚠️</div>
         <h3 class="modal-title" id="errorModalTitle">Operation Failed</h3>
-        <p class="modal-message" id="errorModalMsg">An error occurred while connecting to the interview service.</p>
+        <p class="modal-message" id="errorModalMsg">An error occurred.</p>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="errorModalCloseBtn">Dismiss</button>
         </div>
@@ -490,11 +414,11 @@
     <!-- App Footer -->
     <footer class="app-footer">
       <div class="footer-inner">
-        <span>InterviewIQ &bull; Academic AI Interview Simulator</span>
+        <span>InterviewIQ</span>
         <span class="footer-sep">&bull;</span>
-        <span>Runs locally on free-tier Groq API</span>
+        <span>1-on-1 Academic AI Interview Simulator</span>
         <span class="footer-sep">&bull;</span>
-        <span>100% In-Memory State &bull; Zero Persistence</span>
+        <span>Memory-Only State</span>
       </div>
     </footer>
   </div>

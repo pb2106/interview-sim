@@ -206,3 +206,23 @@ def test_full_interview_flow_to_completion(client, sample_session):
         assert report["weakest_answer"] is not None
         assert "Load Factor 2/3" in report["frequently_missing_concepts"]
         assert len(report["prioritized_recommendations"]) == 3
+
+        # Downloading PDF report should now succeed
+        res_pdf = client.get(f"/api/interviews/{sample_session.interview_id}/pdf")
+        assert res_pdf.status_code == 200
+        assert res_pdf.headers["content-type"] == "application/pdf"
+        assert res_pdf.content.startswith(b"%PDF")
+        assert len(res_pdf.content) > 500
+
+
+def test_cannot_download_pdf_before_interview_completion(client, sample_session):
+    """GET /api/interviews/{id}/pdf returns 400 if interview is incomplete."""
+    res = client.get(f"/api/interviews/{sample_session.interview_id}/pdf")
+    assert res.status_code == 400
+    assert "not completed yet" in res.json()["detail"].lower()
+
+
+def test_download_pdf_unknown_id(client):
+    """GET /api/interviews/{id}/pdf returns 404 for unknown session."""
+    res = client.get("/api/interviews/non-existent-uuid/pdf")
+    assert res.status_code == 404

@@ -177,9 +177,9 @@ Requirements:
             raise GroqServiceException("Groq API client is not configured. Check your .env file.")
 
         system_prompt = (
-            "You are an expert technical and behavioural interview evaluator. "
+            "You are a human technical interviewer conducting a 1-on-1 interview. "
             "Output valid JSON only matching the specified rubric fields. "
-            "Never produce markdown formatting outside JSON."
+            "No emojis, no markdown formatting outside JSON."
         )
 
         expected_concepts_str = ", ".join(question.expected_concepts)
@@ -200,6 +200,7 @@ Evaluation Rules:
 2. Distinguish completely incorrect information from simply missing details.
 3. Do not award points for verbose, irrelevant fluff.
 4. Calibrate expectations to {difficulty.value} difficulty level.
+5. In 'feedback': Provide very minimal, human-like feedback in 1 to 2 short sentences as if speaking directly to the candidate (e.g., 'Good answer, you covered X and Y well.' or 'That is incorrect. The right answer is Z.'). If the answer is wrong or incomplete, state what the right answer is directly without explaining why. Do not write long paragraphs. Do not use emojis.
 
 Rubric:
 - correctness_score: 0 to 4 (0=completely incorrect/misleading, 1=minimal accuracy, 2=partially accurate, 3=mostly accurate, 4=thoroughly correct)
@@ -213,12 +214,12 @@ Output JSON structure:
   "relevance_score": int (0-2),
   "completeness_score": int (0-2),
   "clarity_score": int (0-2),
-  "strengths": ["string", ...],
-  "weaknesses": ["string", ...],
-  "missing_concepts": ["string", ...],
-  "feedback": "string (concise explanation of score)",
-  "ideal_answer": "string (model answer for comparison)",
-  "improvement_tip": "string (one actionable tip)"
+  "strengths": ["concise string", ...],
+  "weaknesses": ["concise string", ...],
+  "missing_concepts": ["concise string", ...],
+  "feedback": "string (1-2 short sentences speaking directly to candidate; if wrong, state what the right answer is without explaining why)",
+  "ideal_answer": "string (concise reference answer for final report)",
+  "improvement_tip": "string (one concise recommendation for final report)"
 }}"""
 
         def _call():

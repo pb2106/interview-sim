@@ -1,6 +1,6 @@
 import logging
 import uuid
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 from app.models.interview import InterviewSession, InterviewStatus
 from app.schemas.request import CreateInterviewRequest, SubmitAnswerRequest
 from app.schemas.response import (
@@ -17,6 +17,7 @@ from app.services.groq_service import (
     GroqValidationException,
     groq_service,
 )
+from app.services.pdf_service import generate_pdf_report
 from app.services.report_service import ReportService
 from app.state import interview_store
 
@@ -229,4 +230,40 @@ def get_interview_results(interview_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate performance report: {str(e)}",
+        )
+
+
+@router.get("/{interview_id}/pdf")
+def download_interview_pdf(interview_id: str):
+    """Generate and download the complete interview performance report as a PDF."""
+    session = interview_store.get(interview_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Interview session '{interview_id}' not found.",
+        )
+
+    unanswered = [q for q in session.questions if q.evaluation is None]
+    if unanswered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Interview is not completed yet. {len(unanswered)} of {session.total_questions} questions remaining.",
+        )
+
+    try:
+        report = ReportService.generate_report(session)
+        pdf_bytes = generate_pdf_report(report)
+        filename = f"InterviewIQ_Report_{interview_id[:8]}.pdf"
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error generating PDF report: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate PDF report: {str(e)}",
         )
