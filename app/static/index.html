@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InterviewIQ — AI Interview Simulator</title>
+  <meta name="description" content="AI Interview Simulator with measurable rubric evaluation powered by Groq. Minimal tokens, in-memory state, and detailed performance reports.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Ambient Motion Graphics Background Canvas -->
+  <div class="ambient-canvas" id="ambientCanvas" aria-hidden="true">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Top Navigation -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="url(#brandGrad)" />
+            <path d="M8 14.5L12 18.5L20 9.5" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="brandGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6366F1"/>
+                <stop offset="1" stop-color="#06B6D4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">InterviewIQ</span>
+          <span class="brand-badge">Academic Simulator</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-pill in-memory-badge" title="No database or disk retention. Memory-only session.">
+          <span class="pulse-dot"></span> In-Memory State Only
+        </span>
+        <span class="status-pill groq-badge">Powered by Groq</span>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Content Views -->
+    <main class="app-main" id="appMain">
+
+      <!-- ================= SETUP VIEW ================= -->
+      <section class="view-panel setup-view active" id="setupView">
+        <div class="view-header text-center">
+          <div class="chip-label">Interactive Assessment</div>
+          <h1 class="hero-title">Prepare, Practice, and Measure Your Interview Answers</h1>
+          <p class="hero-subtitle">
+            Evaluate your technical articulation against rigorous AI rubrics with component-based scoring, actionable feedback, and token-efficient execution.
+          </p>
+        </div>
+
+        <form class="setup-form" id="setupForm" onsubmit="event.preventDefault();">
+          <!-- Category Selection -->
+          <div class="form-group">
+            <div class="form-group-header">
+              <label class="group-label">1. Select Interview Domain</label>
+              <span class="helper-text">Choose the focus area for your questions</span>
+            </div>
+            <div class="option-grid category-grid" id="categoryGroup" role="radiogroup" aria-label="Category">
+              <label class="option-card active" data-value="Software Development">
+                <input type="radio" name="category" value="Software Development" checked>
+                <div class="option-icon">💻</div>
+                <div class="option-content">
+                  <span class="option-title">Software Development</span>
+                  <span class="option-desc">Architecture, design patterns, testing, system trade-offs</span>
+                </div>
+              </label>
+
+              <label class="option-card" data-value="Python">
+                <input type="radio" name="category" value="Python">
+                <div class="option-icon">🐍</div>
+                <div class="option-content">
+                  <span class="option-title">Python</span>
+                  <span class="option-desc">Memory management, GIL, async, OOP, and data model</span>
+                </div>
+              </label>
+
+              <label class="option-card" data-value="SQL">
+                <input type="radio" name="category" value="SQL">
+                <div class="option-icon">🗄️</div>
+                <div class="option-content">
+                  <span class="option-title">SQL</span>
+                  <span class="option-desc">Queries, indexing, transactions, ACID, normalization</span>
+                </div>
+              </label>
+
+              <label class="option-card" data-value="Data Structures and Algorithms">
+                <input type="radio" name="category" value="Data Structures and Algorithms">
+                <div class="option-icon">⚡</div>
+                <div class="option-content">
+                  <span class="option-title">Data Structures &amp; Algo</span>
+                  <span class="option-desc">Complexity, graphs, dynamic programming, trees</span>
+                </div>
+              </label>
+
+              <label class="option-card" data-value="General">
+                <input type="radio" name="category" value="General">
+                <div class="option-icon">🌐</div>
+                <div class="option-content">
+                  <span class="option-title">General</span>
+                  <span class="option-desc">Engineering principles, troubleshooting, API paradigms</span>
+                </div>
+              </label>
+
+              <label class="option-card" data-value="Behavioural">
+                <input type="radio" name="category" value="Behavioural">
+                <div class="option-icon">🤝</div>
+                <div class="option-content">
+                  <span class="option-title">Behavioural</span>
+                  <span class="option-desc">STAR method, leadership, conflicts, decision trade-offs</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Difficulty & Question Count Dual Row -->
+          <div class="form-row-dual">
+            <!-- Difficulty -->
+            <div class="form-group flex-1">
+              <div class="form-group-header">
+                <label class="group-label">2. Target Difficulty</label>
+                <span class="helper-text">Calibrates scoring expectations</span>
+              </div>
+              <div class="pill-group" id="difficultyGroup" role="radiogroup" aria-label="Difficulty">
+                <label class="pill-card" data-value="Beginner">
+                  <input type="radio" name="difficulty" value="Beginner">
+                  <span class="pill-title">Beginner</span>
+                  <span class="pill-sub">Foundations</span>
+                </label>
+                <label class="pill-card active" data-value="Intermediate">
+                  <input type="radio" name="difficulty" value="Intermediate" checked>
+                  <span class="pill-title">Intermediate</span>
+                  <span class="pill-sub">Applied</span>
+                </label>
+                <label class="pill-card" data-value="Advanced">
+                  <input type="radio" name="difficulty" value="Advanced">
+                  <span class="pill-title">Advanced</span>
+                  <span class="pill-sub">In-depth</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Question Count -->
+            <div class="form-group flex-1">
+              <div class="form-group-header">
+                <label class="group-label">3. Question Count</label>
+                <span class="helper-text">Generated once in server memory</span>
+              </div>
+              <div class="pill-group" id="countGroup" role="radiogroup" aria-label="Question Count">
+                <label class="pill-card active" data-value="5">
+                  <input type="radio" name="question_count" value="5" checked>
+                  <span class="pill-title">5 Questions</span>
+                  <span class="pill-sub">~8 minutes</span>
+                </label>
+                <label class="pill-card" data-value="10">
+                  <input type="radio" name="question_count" value="10">
+                  <span class="pill-title">10 Questions</span>
+                  <span class="pill-sub">~18 minutes</span>
+                </label>
+                <label class="pill-card" data-value="15">
+                  <input type="radio" name="question_count" value="15">
+                  <span class="pill-title">15 Questions</span>
+                  <span class="pill-sub">~28 minutes</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rubric Notice Box -->
+          <div class="info-card">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-text">
+              <strong>Fixed 10-Point Rubric:</strong>
+              Each answer is evaluated on Technical Correctness (0–4 pts), Relevance (0–2 pts), Completeness (0–2 pts), and Clarity (0–2 pts). Scores are calculated strictly in Python.
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary btn-large" id="startInterviewBtn">
+              <span class="btn-text">Generate Questions &amp; Begin</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ================= INTERVIEW VIEW ================= -->
+      <section class="view-panel interview-view" id="interviewView" style="display: none;">
+        <!-- Interview Header with Progress Tracker -->
+        <div class="interview-tracker-card">
+          <div class="tracker-top">
+            <div class="meta-tags">
+              <span class="meta-pill" id="currentCategoryTag">Category</span>
+              <span class="meta-pill difficulty-pill" id="currentDifficultyTag">Difficulty</span>
+            </div>
+            <div class="tracker-stats">
+              <span class="tracker-q-label">Question <strong id="questionNumberIndicator">1</strong> of <strong id="totalQuestionsIndicator">5</strong></span>
+            </div>
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar-fill" id="interviewProgressBar" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="question-container-card">
+          <div class="question-header">
+            <div class="q-badge">Question Prompt</div>
+          </div>
+          <div class="question-statement" id="questionStatementText">
+            Loading question...
+          </div>
+        </div>
+
+        <!-- Answer Input Card (Active State) -->
+        <div class="answer-card" id="answerFormCard">
+          <div class="answer-card-header">
+            <label for="answerTextarea" class="input-label">Your Response</label>
+            <span class="char-counter" id="charCounter">0 / 5,000 characters</span>
+          </div>
+
+          <textarea 
+            id="answerTextarea" 
+            class="answer-textarea" 
+            placeholder="Type your structured explanation here. Be concise, technically precise, and mention key mechanisms or trade-offs..."
+            rows="6"
+            maxlength="5000"
+          ></textarea>
+
+          <div class="answer-actions">
+            <span class="answer-hint" id="answerLengthHint">Minimum 2 characters required</span>
+            <button type="button" class="btn btn-primary" id="submitAnswerBtn" disabled>
+              <span class="btn-text">Submit Answer</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State Card -->
+        <div class="eval-loading-card" id="evalLoadingCard" style="display: none;">
+          <div class="eval-spinner"></div>
+          <div class="eval-loading-text">
+            <h3>Evaluating Your Response with Groq AI...</h3>
+            <p>Analyzing technical correctness, relevance, completeness, and clarity against the grading rubric.</p>
+          </div>
+        </div>
+
+        <!-- Evaluation Feedback Card (Shown after submission) -->
+        <div class="eval-result-card" id="evalResultCard" style="display: none;">
+          <div class="eval-result-header">
+            <div class="eval-score-summary">
+              <div class="score-circle-badge">
+                <span class="score-num" id="evalScoreValue">8</span>
+                <span class="score-denom">/10</span>
+              </div>
+              <div class="score-meta">
+                <h3 class="eval-title">Answer Evaluation</h3>
+                <p class="eval-feedback" id="evalFeedbackText">Feedback summary...</p>
+              </div>
+            </div>
+
+            <div class="eval-rubric-mini">
+              <div class="rubric-mini-item">
+                <span class="rm-label">Correctness</span>
+                <span class="rm-val" id="rmCorrectness">3/4</span>
+              </div>
+              <div class="rubric-mini-item">
+                <span class="rm-label">Relevance</span>
+                <span class="rm-val" id="rmRelevance">2/2</span>
+              </div>
+              <div class="rubric-mini-item">
+                <span class="rm-label">Completeness</span>
+                <span class="rm-val" id="rmCompleteness">1/2</span>
+              </div>
+              <div class="rubric-mini-item">
+                <span class="rm-label">Clarity</span>
+                <span class="rm-val" id="rmClarity">2/2</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Evaluation Insights Grid -->
+          <div class="eval-details-grid">
+            <div class="eval-col">
+              <div class="detail-block strengths-block">
+                <div class="detail-title">Key Strengths</div>
+                <ul class="detail-list" id="evalStrengthsList"></ul>
+              </div>
+              <div class="detail-block weaknesses-block">
+                <div class="detail-title">Areas for Refinement</div>
+                <ul class="detail-list" id="evalWeaknessesList"></ul>
+              </div>
+            </div>
+
+            <div class="eval-col">
+              <div class="detail-block missing-block" id="missingConceptsContainer">
+                <div class="detail-title">Expected Concepts Omitted</div>
+                <div class="tags-cloud" id="evalMissingTags"></div>
+              </div>
+              <div class="detail-block tip-block">
+                <div class="detail-title">Actionable Recommendation</div>
+                <p class="tip-text" id="evalImprovementTipText"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ideal Answer Reference Box -->
+          <div class="ideal-answer-box">
+            <button type="button" class="toggle-ideal-btn" id="toggleIdealBtn">
+              <span>View Reference Model Answer</span>
+              <span class="chevron" id="idealChevron">▼</span>
+            </button>
+            <div class="ideal-answer-content" id="idealAnswerContent" style="display: none;">
+              <p id="evalIdealAnswerText"></p>
+            </div>
+          </div>
+
+          <!-- Next Button Action -->
+          <div class="eval-actions">
+            <button type="button" class="btn btn-primary btn-large" id="nextQuestionBtn">
+              <span class="btn-text" id="nextBtnText">Proceed to Next Question</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= RESULTS VIEW ================= -->
+      <section class="view-panel results-view" id="resultsView" style="display: none;">
+        <div class="view-header text-center">
+          <div class="chip-label">Final Evaluation Complete</div>
+          <h1 class="hero-title">Interview Performance Report</h1>
+          <p class="hero-subtitle">
+            Comprehensive metric breakdown calculated in Python from your submitted answers.
+          </p>
+        </div>
+
+        <!-- Top Score Banner Card -->
+        <div class="report-overview-card">
+          <div class="overview-left">
+            <div class="gauge-wrapper">
+              <svg class="score-gauge-svg" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="meterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="100%" stop-color="#06b6d4" />
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="60" cy="60" r="50"/>
+                <circle class="gauge-meter" id="gaugeMeter" cx="60" cy="60" r="50"/>
+              </svg>
+              <div class="gauge-center-text">
+                <span class="gauge-percentage" id="reportPercentage">0%</span>
+                <span class="gauge-sub" id="reportScoreRatio">0/50</span>
+              </div>
+            </div>
+
+            <div class="grade-summary">
+              <div class="grade-pill-badge" id="reportGradeBadge">Good</div>
+              <h2 class="grade-title" id="reportGradeTitle">Solid Technical Competence</h2>
+              <p class="grade-desc" id="reportGradeDesc">Description</p>
+              <span class="stat-avg">Average Question Score: <strong id="reportAvgScore">0.0</strong> / 10</span>
+            </div>
+          </div>
+
+          <div class="overview-right">
+            <div class="meta-grid">
+              <div class="meta-cell">
+                <span class="mc-label">Category</span>
+                <span class="mc-value" id="reportCategory">Software Development</span>
+              </div>
+              <div class="meta-cell">
+                <span class="mc-label">Difficulty</span>
+                <span class="mc-value" id="reportDifficulty">Intermediate</span>
+              </div>
+              <div class="meta-cell">
+                <span class="mc-label">Total Questions</span>
+                <span class="mc-value" id="reportTotalQ">5</span>
+              </div>
+              <div class="meta-cell">
+                <span class="mc-label">Storage Retention</span>
+                <span class="mc-value text-accent">Memory-Only</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rubric Criteria Breakdown Cards -->
+        <div class="section-title-wrap">
+          <h3 class="section-heading">Criterion-by-Criterion Rubric Breakdown</h3>
+          <span class="section-note">Fixed 10-point evaluation breakdown across all questions</span>
+        </div>
+
+        <div class="criteria-grid" id="criteriaBreakdownGrid">
+          <!-- Populated by app.js -->
+        </div>
+
+        <!-- Strongest & Weakest Answers Cards -->
+        <div class="highlights-grid">
+          <div class="highlight-card strongest-card">
+            <div class="highlight-badge">★ Highest Scoring Answer</div>
+            <div class="hl-content" id="strongestAnswerContent">
+              <h4 class="hl-q-title" id="strongestQTitle">Question</h4>
+              <div class="hl-score" id="strongestQScore">10/10</div>
+              <p class="hl-feedback" id="strongestQFeedback"></p>
+            </div>
+          </div>
+
+          <div class="highlight-card weakest-card">
+            <div class="highlight-badge">▲ Primary Area for Growth</div>
+            <div class="hl-content" id="weakestAnswerContent">
+              <h4 class="hl-q-title" id="weakestQTitle">Question</h4>
+              <div class="hl-score" id="weakestQScore">5/10</div>
+              <p class="hl-feedback" id="weakestQFeedback"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Frequently Missing Concepts & 3 Recommendations -->
+        <div class="insights-dual-grid">
+          <div class="insight-panel missing-panel">
+            <h3 class="panel-heading">Frequently Omitted Technical Concepts</h3>
+            <p class="panel-sub">Concepts that repeatedly appeared in the rubric's expected list:</p>
+            <div class="tags-cloud" id="reportFrequentlyMissingTags">
+              <span class="tag">None identified</span>
+            </div>
+          </div>
+
+          <div class="insight-panel recs-panel">
+            <h3 class="panel-heading">3 Prioritized Recommendations</h3>
+            <p class="panel-sub">Targeted guidance synthesized from your performance:</p>
+            <ol class="recs-list" id="reportRecommendationsList">
+              <!-- Populated by app.js -->
+            </ol>
+          </div>
+        </div>
+
+        <!-- Question-by-Question Review Accordion -->
+        <div class="section-title-wrap">
+          <h3 class="section-heading">Question-by-Question Detailed Review</h3>
+          <span class="section-note">Click any question to view your submission, rubric scores, and reference answer</span>
+        </div>
+
+        <div class="questions-accordion" id="questionsAccordion">
+          <!-- Populated by app.js -->
+        </div>
+
+        <!-- Disclaimers & Notes -->
+        <div class="disclaimer-banner">
+          <p id="reportGradingNote">Grading note</p>
+          <p id="reportDisclaimerNote">Disclaimer note</p>
+        </div>
+
+        <!-- Final Retake Actions -->
+        <div class="results-actions text-center">
+          <button type="button" class="btn btn-primary btn-large" id="retakeInterviewBtn">
+            <span class="btn-text">Start New Interview</span>
+            <span class="btn-arrow" aria-hidden="true">↻</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Error Modal / Toast -->
+    <div class="modal-backdrop" id="errorModal" style="display: none;" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <div class="modal-icon">⚠️</div>
+        <h3 class="modal-title" id="errorModalTitle">Operation Failed</h3>
+        <p class="modal-message" id="errorModalMsg">An error occurred while connecting to the interview service.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="errorModalCloseBtn">Dismiss</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <span>InterviewIQ &bull; Academic AI Interview Simulator</span>
+        <span class="footer-sep">&bull;</span>
+        <span>Runs locally on free-tier Groq API</span>
+        <span class="footer-sep">&bull;</span>
+        <span>100% In-Memory State &bull; Zero Persistence</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
