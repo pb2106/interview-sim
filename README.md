@@ -1,56 +1,70 @@
 # InterviewIQ — 1-on-1 AI Interview Simulator
 
-InterviewIQ is an academic AI-powered interview simulator built with Python, FastAPI, and the official Groq Python SDK. It provides a realistic 1-on-1 conversational interview experience with an AI interviewer ("Alex"). Candidate responses are evaluated against a rigorous, component-based rubric in real time using minimal tokens, purely in-memory session state, zero persistent storage, and downloadable PDF performance reports.
+InterviewIQ is an academic AI interview simulator built with Python, FastAPI, and the official Groq Python SDK. It provides an authentic 1-on-1 conversational interview experience with an AI interviewer ("Alex"). Candidate answers are evaluated against a fixed, 4-component rubric in real time using minimal tokens, purely in-memory session state, zero persistent storage, and downloadable PDF performance reports.
 
 ---
 
-## Key Highlights & Architectural Guarantees
+## 1. What InterviewIQ Does
 
-1. **1-on-1 Chatbot Experience**:
-   - Natural conversational dialogue with an AI interviewer.
-   - Interactive chat message stream with human-like interviewer responses.
-   - **Zero Emojis**: Clean, professional, and accessible typography without emojis.
+1. **1-on-1 Conversational Interview Flow**:
+   - The user selects an interview category (**Software Development**, **Python**, **SQL**, **Data Structures and Algorithms**, **General Engineering**, or **Behavioural**).
+   - The user selects a difficulty (**Beginner**, **Intermediate**, or **Advanced**) and question count (**5**, **10**, or **15**).
+   - The session initiates a live 1-on-1 chat stream with an AI interviewer persona ("Alex").
+   - Questions are presented one by one as natural conversation prompts.
 
-2. **Minimal After-Answer Feedback**:
-   - Feedback after each question is kept very concise (1 to 2 sentences) to maintain real-world interview momentum.
-   - **Direct Right-Answer Disclosure**: If the candidate's answer is wrong or incomplete, the interviewer tells them the correct answer directly without overwhelming them with long paragraphs or unnecessary explanations.
+2. **Minimal After-Answer Feedback with Direct Answers**:
+   - Feedback after each question is kept concise (1 to 2 short sentences) to maintain the realistic pace of an interview.
+   - **Direct Right-Answer Disclosure**: If an answer is wrong or incomplete, the interviewer directly states the correct answer without writing long paragraphs or unnecessary explanations.
+   - Candidates smoothly advance through questions using the **"Continue to Question N"** action in the chat stream.
 
-3. **Comprehensive PDF Performance Report**:
-   - At the conclusion of the interview, candidates receive an in-depth breakdown and can download a formatted **PDF evaluation report** (`/api/interviews/{id}/pdf`).
-   - The PDF contains the full session overview, component-by-component rubric breakdown, question-by-question candidate submissions, reference answers, frequently missing concepts, and three prioritized recommendations.
-
-4. **Zero Persistence Guarantee**:
-   - **No databases, no file-based storage, no SQLite, and no browser storage** (`localStorage`, `sessionStorage`, or cookies).
-   - All interview sessions and evaluations exist exclusively in server memory (`app/state.py`).
-   - When the server process restarts, all interview data vanishes immediately.
-
-5. **Objective Python-Calculated Scoring**:
-   - Final scores ($0\text{--}10$) are **computed strictly in Python** from the sum of four rubric component scores rather than relying on LLM arithmetic:
+3. **Objective Python-Calculated 10-Point Rubric**:
+   - Every answer is scored on four criteria, and the final score ($0\text{--}10$) is **calculated strictly in Python** by summing the components (never trusting LLM arithmetic):
      - **Technical Correctness**: $0\text{--}4$ points
      - **Relevance**: $0\text{--}2$ points
      - **Completeness**: $0\text{--}2$ points
      - **Clarity**: $0\text{--}2$ points
-   - Evaluator recognizes alternative technically correct solutions, separates missing concepts from factual inaccuracies, and does not reward irrelevant verbosity.
+   - The evaluator accepts alternative technically valid solutions, distinguishes incorrect facts from omitted details, does not reward filler verbosity, and calibrates scoring to the selected difficulty.
 
-6. **Confidentiality Pre-Submission**:
+4. **Zero Persistence Guarantee**:
+   - **No databases, no file-based storage, no SQLite, and no browser storage** (`localStorage`, `sessionStorage`, cookies, or IndexedDB).
+   - All interview sessions and evaluations exist exclusively in server memory (`app/state.py`).
+   - When the server process restarts, all interview data vanishes immediately.
+
+5. **Pre-Submission Confidentiality**:
    - Questions are generated once at interview creation.
    - Expected concepts and reference answers are **never sent to the client** prior to answer submission.
 
+6. **Comprehensive End-of-Interview PDF Report**:
+   - When the interview concludes, candidates view a full performance dashboard and can download a formatted **PDF report** (`/api/interviews/{id}/pdf`) containing:
+     - Overall score, percentage, and application-defined grade ($90\text{--}100\%$ Excellent, $75\text{--}89\%$ Good, $60\text{--}74\%$ Satisfactory, $40\text{--}59\%$ Needs Improvement, $<40\%$ Poor).
+     - Breakdown across each of the 4 evaluation criteria.
+     - Question-by-question review with candidate answers, component scores, and reference answers.
+     - Frequently omitted technical concepts.
+     - Three prioritized improvement recommendations.
+     - Grading band notes and AI evaluation disclaimers.
+
+7. **Zero Emojis**:
+   - Clean, professional design with zero emojis across the interface, chat messages, and reports.
+
 ---
 
-## Tech Stack
+## 2. Tech Stack
 
-- **Backend**: Python 3.10+ / FastAPI
-- **AI Engine**: Groq API via official `groq` Python SDK
-- **Validation**: Pydantic v2
-- **PDF Generation**: ReportLab
-- **Frontend**: HTML5, Vanilla CSS3 (Custom design system), Vanilla JavaScript (Zero dependencies)
-- **Server**: Uvicorn
-- **Testing**: pytest, pytest-asyncio, httpx
+- **Backend Framework**: Python 3.10+ / **FastAPI**
+- **AI Engine**: **Groq API** via the official `groq` Python SDK
+  - Tested & active model: `qwen/qwen3.8-27b` (configurable via `GROQ_MODEL`)
+- **Validation**: **Pydantic v2** & `pydantic-settings`
+- **PDF Engine**: **ReportLab** (Pure Python in-memory PDF generation)
+- **Frontend**: **Vanilla HTML5, CSS3, JavaScript**
+  - Zero external UI dependencies (no React, Tailwind, or CDNs)
+  - Dark mode with ambient SVG motion graphics
+  - Single-page application architecture
+- **Web Server**: **Uvicorn**
+- **Testing**: **pytest**, `pytest-asyncio`, `httpx` (26 automated tests passing offline)
 
 ---
 
-## Project Structure
+## 3. Project Structure
 
 ```
 interview-Sim/
@@ -95,25 +109,32 @@ interview-Sim/
 
 ---
 
-## Installation & Setup
+## 4. How to Start the Application
 
-### 1. Prerequisites
-- Linux / macOS / Windows with Python 3.10 or higher.
+### Step 1: Clone & Navigate to Project
+```bash
+git clone git@github.com:pb2106/interview-sim.git
+cd interview-sim
+```
 
-### 2. Set Up Virtual Environment & Dependencies
+### Step 2: Set Up Virtual Environment
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-### 3. Configure `.env`
-Create or edit `.env` in the root directory:
+### Step 4: Configure Environment Variables
+Ensure a `.env` file exists in the root directory:
 ```env
 # Groq API key (supports groq_API or GROQ_API_KEY)
 groq_API=gsk_your_groq_api_key_here
 
-# Groq model (tested and active: qwen/qwen3.8-27b)
+# Groq Model (tested and active: qwen/qwen3.8-27b)
 GROQ_MODEL=qwen/qwen3.8-27b
 
 # Server configuration
@@ -121,59 +142,56 @@ HOST=127.0.0.1
 PORT=8000
 ```
 
----
-
-## Running the Application
-
-Launch the Uvicorn server:
+### Step 5: Start the Server
 ```bash
 source .venv/bin/activate
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Once started, open your web browser and navigate to:
-```
-http://127.0.0.1:8000/
-```
-
-Interactive API documentation (Swagger UI) is available at:
-```
-http://127.0.0.1:8000/docs
-```
+### Step 6: Open in Browser
+- **Web App**: Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+- **Swagger API Docs**: Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ---
 
-## Running Automated Tests
+## 5. Running Automated Tests
 
-Run the full automated test suite with pytest:
+Run the full automated test suite using `pytest`:
 ```bash
 source .venv/bin/activate
 pytest -v
 ```
 
-All 26 automated tests run completely offline by mocking Groq API calls, consuming zero API credits and verifying:
+All 26 automated tests execute completely offline by mocking Groq API calls, consuming zero API credits and verifying:
 - Successful interview creation and hiding secrets from responses.
-- Validation bounds for categories, difficulties, and question counts ($5$, $10$, $15$).
-- Strict Python arithmetic calculation of the final score from components.
+- Input validation bounds for categories, difficulties, and question counts ($5$, $10$, $15$).
+- Strict Python arithmetic calculation of final score from components.
 - Prevention of duplicate answer submissions.
-- Minimal conversational feedback and direct right-answer disclosure.
+- Sequential question navigation.
 - Generation and download of the complete PDF report (`GET /api/interviews/{id}/pdf`).
-- Rejection of premature result or PDF queries prior to interview completion.
+- Premature query protection (cannot get results/PDF before completion).
 - Bounded retry and error translation for Groq rate limits ($429$) and timeouts ($504$).
 - Verification that zero database files (`.db`, `.sqlite`) exist on disk.
 
 ---
 
-## API Endpoints Reference
+## 6. API Reference & Example Requests
 
-### 1. `GET /api/health`
-Health check and active session count.
+### 1. Health Check
 ```bash
 curl -X GET http://127.0.0.1:8000/api/health
 ```
+**Response:**
+```json
+{
+  "status": "ok",
+  "app": "InterviewIQ",
+  "model": "qwen/qwen3.8-27b",
+  "active_in_memory_sessions": 0
+}
+```
 
-### 2. `POST /api/interviews`
-Initializes an interview session and generates questions once in server memory.
+### 2. Create Interview Session
 ```bash
 curl -X POST http://127.0.0.1:8000/api/interviews \
   -H "Content-Type: application/json" \
@@ -183,31 +201,62 @@ curl -X POST http://127.0.0.1:8000/api/interviews \
     "question_count": 5
   }'
 ```
+**Response:**
+```json
+{
+  "interview_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "category": "Python",
+  "difficulty": "Intermediate",
+  "total_questions": 5,
+  "current_question_index": 0,
+  "current_question": {
+    "question_number": 1,
+    "total_questions": 5,
+    "question": "How does Python handle hash collisions in dictionaries?"
+  }
+}
+```
 
-### 3. `GET /api/interviews/{interview_id}`
-Retrieves current progress and question prompt.
+### 3. Get Interview Progress
 ```bash
 curl -X GET http://127.0.0.1:8000/api/interviews/<interview_id>
 ```
 
-### 4. `POST /api/interviews/{interview_id}/answers`
-Evaluates a candidate answer against the 4-component rubric and returns minimal conversational feedback with the right answer if incomplete.
+### 4. Submit Answer
 ```bash
 curl -X POST http://127.0.0.1:8000/api/interviews/<interview_id>/answers \
   -H "Content-Type: application/json" \
   -d '{
-    "answer": "Python dictionaries use open addressing with pseudo-random probing to resolve collisions."
+    "answer": "Python dictionaries use open addressing with pseudo-random probing to resolve collisions. When load factor exceeds 2/3, the table resizes."
   }'
 ```
+**Response:**
+```json
+{
+  "question_number": 1,
+  "user_answer": "Python dictionaries use open addressing...",
+  "score": 10,
+  "correctness_score": 4,
+  "relevance_score": 2,
+  "completeness_score": 2,
+  "clarity_score": 2,
+  "strengths": ["Accurately identifies open addressing and probing."],
+  "weaknesses": [],
+  "missing_concepts": [],
+  "feedback": "Spot on. You accurately covered open addressing, probing, and the 2/3 load factor threshold.",
+  "ideal_answer": "Python dictionaries use open addressing with pseudo-random probing...",
+  "improvement_tip": "Keep providing precise numerical thresholds in system design questions.",
+  "is_interview_completed": false,
+  "next_question_index": 1
+}
+```
 
-### 5. `GET /api/interviews/{interview_id}/results`
-Retrieves the comprehensive final performance report JSON once all questions are answered.
+### 5. Get Final Performance Report (JSON)
 ```bash
 curl -X GET http://127.0.0.1:8000/api/interviews/<interview_id>/results
 ```
 
-### 6. `GET /api/interviews/{interview_id}/pdf`
-Generates and downloads the comprehensive final evaluation report in PDF format.
+### 6. Download Full Performance Report (PDF)
 ```bash
 curl -X GET http://127.0.0.1:8000/api/interviews/<interview_id>/pdf -o interview_report.pdf
 ```

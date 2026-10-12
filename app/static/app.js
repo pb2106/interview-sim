@@ -385,31 +385,30 @@
     actionRow.className = 'chat-action-row';
 
     if (evalData.is_interview_completed) {
-      actionRow.innerHTML = `
-        <button type="button" class="btn btn-primary btn-chat-next" id="viewReportBtn">
-          View Complete Performance Report &amp; PDF
-        </button>
-      `;
+      const reportBtn = document.createElement('button');
+      reportBtn.type = 'button';
+      reportBtn.className = 'btn btn-primary btn-chat-next';
+      reportBtn.textContent = 'View Complete Performance Report & PDF';
+      reportBtn.addEventListener('click', async () => {
+        reportBtn.disabled = true;
+        await fetchFinalResults();
+      });
+      actionRow.appendChild(reportBtn);
       elements.chatStream.appendChild(actionRow);
       scrollChatToBottom();
-
-      document.getElementById('viewReportBtn').addEventListener('click', fetchFinalResults);
     } else {
       const nextQNum = completedCount + 1;
-      actionRow.innerHTML = `
-        <button type="button" class="btn btn-primary btn-chat-next" id="continueNextQBtn">
-          Continue to Question ${nextQNum}
-        </button>
-      `;
-      elements.chatStream.appendChild(actionRow);
-      scrollChatToBottom();
-
-      document.getElementById('continueNextQBtn').addEventListener('click', async (e) => {
-        // Disable continue button to prevent re-clicks
-        e.target.disabled = true;
-        appState.currentQuestionIndex += 1;
+      const nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'btn btn-primary btn-chat-next';
+      nextBtn.textContent = `Continue to Question ${nextQNum}`;
+      nextBtn.addEventListener('click', async () => {
+        nextBtn.disabled = true;
         await advanceToNextQuestion();
       });
+      actionRow.appendChild(nextBtn);
+      elements.chatStream.appendChild(actionRow);
+      scrollChatToBottom();
     }
   }
 
@@ -429,7 +428,9 @@
       elements.questionNumberIndicator.textContent = qNum;
 
       // Interviewer presents the question
-      appendQuestionBubble(appState.currentQuestion, qNum, appState.totalQuestions);
+      if (appState.currentQuestion) {
+        appendQuestionBubble(appState.currentQuestion, qNum, appState.totalQuestions);
+      }
 
       // Re-enable input bar
       elements.chatInputBar.style.display = 'block';
